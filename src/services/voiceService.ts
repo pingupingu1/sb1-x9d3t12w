@@ -91,9 +91,56 @@ export class VoiceService {
       }
     };
 
-    this.recognition.onerror = (event) => {
-      callbacks.onError?.(new Error(event.error));
+        this.recognition.onresult = (event) => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        callbacks.onResult(
+          result[0].transcript,
+          result.isFinal,
+          result[0].confidence
+        );
+      }
     };
+
+    // ← Your new code starts here (paste it)
+    this.recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      let userMessage = 'Microfoon probleem: toegang mogelijk geweigerd.';
+      switch (event.error) {
+        case 'not-allowed':
+        case 'permission-denied':
+        case 'permission-dismissed':
+          userMessage = 'Microfoon toegang geweigerd. Klik op het slotje in de adresbalk en sta microfoontoegang toe.';
+          break;
+        case 'no-speech':
+          userMessage = 'Geen spraak gedetecteerd. Probeer luider en duidelijker te spreken.';
+          break;
+        case 'audio-capture':
+          userMessage = 'Geen microfoon gevonden of toegang geblokkeerd. Controleer je instellingen.';
+          break;
+        case 'network':
+          userMessage = 'Netwerkfout bij spraakherkenning. Controleer je internetverbinding.';
+          break;
+        case 'aborted':
+          userMessage = 'Spraakherkenning gestopt.';
+          break;
+        case 'service-not-allowed':
+          userMessage = 'Spraakherkenning geblokkeerd door browser. Probeer Chrome op Android.';
+          break;
+        case 'language-not-supported':
+          userMessage = 'Nederlands niet goed ondersteund in deze browser. Gebruik Chrome voor beste resultaat.';
+          break;
+        default:
+          userMessage = 'Microfoon probleem: toegang mogelijk geweigerd.';
+      }
+      callbacks.onError?.(new Error(userMessage));
+    };
+
+    this.recognition.onend = () => {
+      callbacks.onEnd?.();
+    };
+
+    this.recognition.start();
 
     this.recognition.onend = () => {
       callbacks.onEnd?.();
