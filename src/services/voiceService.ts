@@ -91,21 +91,11 @@ export class VoiceService {
       }
     };
 
-        this.recognition.onresult = (event) => {
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        callbacks.onResult(
-          result[0].transcript,
-          result.isFinal,
-          result[0].confidence
-        );
-      }
-    };
-
-    // ← Your new code starts here (paste it)
     this.recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
+
       let userMessage = 'Microfoon probleem: toegang mogelijk geweigerd.';
+
       switch (event.error) {
         case 'not-allowed':
         case 'permission-denied':
@@ -133,14 +123,9 @@ export class VoiceService {
         default:
           userMessage = 'Microfoon probleem: toegang mogelijk geweigerd.';
       }
+
       callbacks.onError?.(new Error(userMessage));
     };
-
-    this.recognition.onend = () => {
-      callbacks.onEnd?.();
-    };
-
-    this.recognition.start();
 
     this.recognition.onend = () => {
       callbacks.onEnd?.();
